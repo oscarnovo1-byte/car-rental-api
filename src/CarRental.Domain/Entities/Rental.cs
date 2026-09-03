@@ -1,4 +1,5 @@
 using CarRental.Domain.Enums;
+using CarRental.Domain.Exceptions;
 
 namespace CarRental.Domain.Entities;
 
@@ -28,7 +29,7 @@ public sealed class Rental
     {
         if (endDate <= startDate)
         {
-            throw new ArgumentException(
+            throw new DomainException(
                 "The rental end date must be after the start date.");
         }
 
