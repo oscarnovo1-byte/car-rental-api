@@ -1,5 +1,6 @@
 using CarRental.Application.Abstractions;
 using CarRental.Infrastructure.Persistence;
+using CarRental.Infrastructure.Queries;
 using CarRental.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<IRentalRepository, RentalRepository>();
+        services.AddScoped<ICarAvailabilityQuery, CarAvailabilityQuery>();
 
         return services;
     }
