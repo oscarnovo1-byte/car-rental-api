@@ -1,0 +1,10 @@
+using CarRental.Domain.Entities;
+
+namespace CarRental.Application.Abstractions;
+
+public interface ICustomerRepository
+{
+    Task<Customer?> GetByIdAsync(
+        Guid customerId,
+        CancellationToken cancellationToken = default);
+}
