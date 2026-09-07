@@ -25,12 +25,10 @@ public sealed class GetRentalsQueryHandlerTests
         var firstRental = new Rental(
             Guid.NewGuid(),
             Guid.NewGuid(),
-            Guid.NewGuid(),
             new DateOnly(2026, 9, 10),
             new DateOnly(2026, 9, 15));
 
         var secondRental = new Rental(
-            Guid.NewGuid(),
             Guid.NewGuid(),
             Guid.NewGuid(),
             new DateOnly(2026, 9, 20),
