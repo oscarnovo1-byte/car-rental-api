@@ -23,6 +23,9 @@ public interface IRentalRepository
         Rental rental,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<Rental>> GetAllAsync(
+        CancellationToken cancellationToken = default);
+
     Task SaveChangesAsync(
         CancellationToken cancellationToken = default);
 }

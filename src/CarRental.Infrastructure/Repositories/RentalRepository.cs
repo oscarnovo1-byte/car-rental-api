@@ -66,6 +66,15 @@ public sealed class RentalRepository : IRentalRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<Rental>> GetAllAsync(
+    CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Rentals
+            .AsNoTracking()
+            .OrderBy(rental => rental.StartDate)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {

@@ -1,0 +1,90 @@
+using CarRental.Application.Abstractions;
+using CarRental.Application.Rentals.GetRentals;
+using CarRental.Domain.Entities;
+using Moq;
+
+namespace CarRental.UnitTests.Application.Rentals;
+
+public sealed class GetRentalsQueryHandlerTests
+{
+    private readonly Mock<IRentalRepository> _rentalRepositoryMock;
+    private readonly GetRentalsQueryHandler _handler;
+
+    public GetRentalsQueryHandlerTests()
+    {
+        _rentalRepositoryMock = new Mock<IRentalRepository>();
+
+        _handler = new GetRentalsQueryHandler(
+            _rentalRepositoryMock.Object);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReturnMappedRentals_WhenRentalsExist()
+    {
+        // Arrange
+        var firstRental = new Rental(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 9, 10),
+            new DateOnly(2026, 9, 15));
+
+        var secondRental = new Rental(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 9, 20),
+            new DateOnly(2026, 9, 25));
+
+        secondRental.Cancel();
+
+        IReadOnlyList<Rental> rentals =
+        [
+            firstRental,
+            secondRental
+        ];
+
+        _rentalRepositoryMock
+            .Setup(x => x.GetAllAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rentals);
+
+        var query = new GetRentalsQuery();
+
+        // Act
+        var result = await _handler.HandleAsync(query);
+
+        // Assert
+        Assert.Equal(2, result.Count);
+
+        Assert.Equal(firstRental.Id, result[0].Id);
+        Assert.Equal(firstRental.CustomerId, result[0].CustomerId);
+        Assert.Equal(firstRental.CarId, result[0].CarId);
+        Assert.Equal(firstRental.StartDate, result[0].StartDate);
+        Assert.Equal(firstRental.EndDate, result[0].EndDate);
+        Assert.Equal(firstRental.Status, result[0].Status);
+
+        Assert.Equal(secondRental.Id, result[1].Id);
+        Assert.Equal(secondRental.Status, result[1].Status);
+    }
+
+    [Fact]
+    public async Task HandleAsync_ShouldReturnEmptyList_WhenNoRentalsExist()
+    {
+        // Arrange
+        IReadOnlyList<Rental> rentals = [];
+
+        _rentalRepositoryMock
+            .Setup(x => x.GetAllAsync(
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(rentals);
+
+        var query = new GetRentalsQuery();
+
+        // Act
+        var result = await _handler.HandleAsync(query);
+
+        // Assert
+        Assert.Empty(result);
+    }
+}
