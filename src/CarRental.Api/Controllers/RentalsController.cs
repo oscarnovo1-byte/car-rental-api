@@ -1,5 +1,7 @@
+using CarRental.Application.Rentals.CancelRental;
 using CarRental.Application.Rentals.CreateRental;
 using CarRental.Application.Rentals.GetRentalById;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.Api.Controllers;
@@ -10,13 +12,16 @@ public sealed class RentalsController : ControllerBase
 {
     private readonly CreateRentalCommandHandler _createRentalCommandHandler;
     private readonly GetRentalByIdQueryHandler _getRentalByIdQueryHandler;
+    private readonly CancelRentalCommandHandler _cancelRentalCommandHandler;
 
     public RentalsController(
         CreateRentalCommandHandler createRentalCommandHandler,
-        GetRentalByIdQueryHandler getRentalByIdQueryHandler)
+        GetRentalByIdQueryHandler getRentalByIdQueryHandler,
+        CancelRentalCommandHandler cancelRentalCommandHandler)
     {
         _createRentalCommandHandler = createRentalCommandHandler;
         _getRentalByIdQueryHandler = getRentalByIdQueryHandler;
+        _cancelRentalCommandHandler = cancelRentalCommandHandler;
     }
 
     [HttpPost]
@@ -52,6 +57,20 @@ public sealed class RentalsController : ControllerBase
             cancellationToken);
 
         return Ok(rental);
+    }
+
+    [HttpPatch("{id:guid}/cancel")]
+    public async Task<IActionResult> CancelRental(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var command = new CancelRentalCommand(id);
+
+        await _cancelRentalCommandHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        return NoContent();
     }
 }
 
