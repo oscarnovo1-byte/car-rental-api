@@ -1,6 +1,7 @@
 using CarRental.Application.Rentals.CancelRental;
 using CarRental.Application.Rentals.CreateRental;
 using CarRental.Application.Rentals.GetRentalById;
+using CarRental.Application.Rentals.GetRentals;
 using CarRental.Application.Rentals.UpdateRental;
 
 using Microsoft.AspNetCore.Mvc;
@@ -15,17 +16,20 @@ public sealed class RentalsController : ControllerBase
     private readonly GetRentalByIdQueryHandler _getRentalByIdQueryHandler;
     private readonly CancelRentalCommandHandler _cancelRentalCommandHandler;
     private readonly UpdateRentalCommandHandler _updateRentalCommandHandler;
+    private readonly GetRentalsQueryHandler _getRentalsQueryHandler;
 
     public RentalsController(
         CreateRentalCommandHandler createRentalCommandHandler,
         GetRentalByIdQueryHandler getRentalByIdQueryHandler,
         CancelRentalCommandHandler cancelRentalCommandHandler,
-        UpdateRentalCommandHandler updateRentalCommandHandler)
+        UpdateRentalCommandHandler updateRentalCommandHandler,
+        GetRentalsQueryHandler getRentalsQueryHandler)
     {
         _createRentalCommandHandler = createRentalCommandHandler;
         _getRentalByIdQueryHandler = getRentalByIdQueryHandler;
         _cancelRentalCommandHandler = cancelRentalCommandHandler;
         _updateRentalCommandHandler = updateRentalCommandHandler;
+        _getRentalsQueryHandler = getRentalsQueryHandler;
     }
 
     [HttpPost]
@@ -95,13 +99,24 @@ public sealed class RentalsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet]
+    public async Task<ActionResult<IReadOnlyList<RentalListItemResponse>>> GetRentals(
+        CancellationToken cancellationToken)
+    {
+        var rentals = await _getRentalsQueryHandler.HandleAsync(
+            new GetRentalsQuery(),
+            cancellationToken);
+
+        return Ok(rentals);
+    }
 }
 
 public sealed record UpdateRentalRequest(
     Guid CarId,
     DateOnly StartDate,
     DateOnly EndDate);
-    
+
 public sealed record CreateRentalRequest(
     Guid CustomerId,
     Guid CarId,
