@@ -4,6 +4,10 @@ namespace CarRental.Application.Abstractions;
 
 public interface IRentalRepository
 {
+    Task<Rental?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+        
     Task<bool> HasOverlappingRentalAsync(
         Guid carId,
         DateOnly startDate,
@@ -13,4 +17,5 @@ public interface IRentalRepository
     Task AddAsync(
         Rental rental,
         CancellationToken cancellationToken = default);
+
 }

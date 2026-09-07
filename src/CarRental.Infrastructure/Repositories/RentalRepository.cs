@@ -2,6 +2,7 @@ using CarRental.Application.Abstractions;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
 using CarRental.Infrastructure.Persistence;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace CarRental.Infrastructure.Repositories;
@@ -15,6 +16,17 @@ public sealed class RentalRepository : IRentalRepository
         _dbContext = dbContext;
     }
 
+    public async Task<Rental?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Rentals
+            .AsNoTracking()
+            .FirstOrDefaultAsync(
+                r => r.Id == id,
+                cancellationToken);
+    }
+    
     public async Task<bool> HasOverlappingRentalAsync(
         Guid carId,
         DateOnly startDate,
