@@ -1,4 +1,5 @@
 using CarRental.Application.Rentals.CreateRental;
+using CarRental.Application.Rentals.GetRentalById;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CarRental.Api.Controllers;
@@ -8,11 +9,14 @@ namespace CarRental.Api.Controllers;
 public sealed class RentalsController : ControllerBase
 {
     private readonly CreateRentalCommandHandler _createRentalCommandHandler;
+    private readonly GetRentalByIdQueryHandler _getRentalByIdQueryHandler;
 
     public RentalsController(
-        CreateRentalCommandHandler createRentalCommandHandler)
+        CreateRentalCommandHandler createRentalCommandHandler,
+        GetRentalByIdQueryHandler getRentalByIdQueryHandler)
     {
         _createRentalCommandHandler = createRentalCommandHandler;
+        _getRentalByIdQueryHandler = getRentalByIdQueryHandler;
     }
 
     [HttpPost]
@@ -30,9 +34,24 @@ public sealed class RentalsController : ControllerBase
             command,
             cancellationToken);
 
-        return StatusCode(
-            StatusCodes.Status201Created,
+        return CreatedAtAction(
+            nameof(GetRentalById),
+            new { id = rentalId },
             new { Id = rentalId });
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<RentalResponse>> GetRentalById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetRentalByIdQuery(id);
+
+        var rental = await _getRentalByIdQueryHandler.HandleAsync(
+            query,
+            cancellationToken);
+
+        return Ok(rental);
     }
 }
 
