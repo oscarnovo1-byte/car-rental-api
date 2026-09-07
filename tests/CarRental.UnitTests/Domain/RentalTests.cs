@@ -85,4 +85,20 @@ public sealed class RentalTests
         // Assert
         Assert.Equal(RentalStatus.Cancelled, rental.Status);
     }
+
+    [Fact]
+    public void Cancel_ShouldThrowDomainException_WhenRentalIsAlreadyCancelled()
+    {
+        var rental = new Rental(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            new DateOnly(2026, 9, 10),
+            new DateOnly(2026, 9, 15));
+
+        rental.Cancel();
+
+        var act = () => rental.Cancel();
+
+        Assert.Throws<DomainException>(act);
+    }
 }

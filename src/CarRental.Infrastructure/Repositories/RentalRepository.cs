@@ -26,7 +26,17 @@ public sealed class RentalRepository : IRentalRepository
                 r => r.Id == id,
                 cancellationToken);
     }
-    
+
+    public async Task<Rental?> GetForUpdateAsync(
+    Guid id,
+    CancellationToken cancellationToken = default)
+    {
+        return await _dbContext.Rentals
+            .FirstOrDefaultAsync(
+                r => r.Id == id,
+                cancellationToken);
+    }
+
     public async Task<bool> HasOverlappingRentalAsync(
         Guid carId,
         DateOnly startDate,
@@ -51,6 +61,12 @@ public sealed class RentalRepository : IRentalRepository
             rental,
             cancellationToken);
 
+        await _dbContext.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task SaveChangesAsync(
+        CancellationToken cancellationToken = default)
+    {
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

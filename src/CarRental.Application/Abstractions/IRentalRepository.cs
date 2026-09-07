@@ -7,7 +7,11 @@ public interface IRentalRepository
     Task<Rental?> GetByIdAsync(
         Guid id,
         CancellationToken cancellationToken = default);
-        
+
+    Task<Rental?> GetForUpdateAsync(
+        Guid id,
+        CancellationToken cancellationToken = default);
+
     Task<bool> HasOverlappingRentalAsync(
         Guid carId,
         DateOnly startDate,
@@ -18,4 +22,6 @@ public interface IRentalRepository
         Rental rental,
         CancellationToken cancellationToken = default);
 
+    Task SaveChangesAsync(
+        CancellationToken cancellationToken = default);
 }

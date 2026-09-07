@@ -1,4 +1,5 @@
 using CarRental.Application.Cars.CheckAvailability;
+using CarRental.Application.Rentals.CancelRental;
 using CarRental.Application.Rentals.CreateRental;
 using CarRental.Application.Rentals.GetRentalById;
 
@@ -14,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<CreateRentalCommandHandler>();
         services.AddScoped<CheckAvailabilityQueryHandler>();
         services.AddScoped<GetRentalByIdQueryHandler>();
+        services.AddScoped<CancelRentalCommandHandler>();
         
         return services;
     }

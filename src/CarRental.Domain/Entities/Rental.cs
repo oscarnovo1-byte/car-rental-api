@@ -43,6 +43,11 @@ public sealed class Rental
 
     public void Cancel()
     {
+        if (Status == RentalStatus.Cancelled)
+        {
+            throw new DomainException("Rental is already cancelled.");
+        }
+
         Status = RentalStatus.Cancelled;
     }
 }
