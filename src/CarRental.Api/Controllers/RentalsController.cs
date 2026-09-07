@@ -1,6 +1,7 @@
 using CarRental.Application.Rentals.CancelRental;
 using CarRental.Application.Rentals.CreateRental;
 using CarRental.Application.Rentals.GetRentalById;
+using CarRental.Application.Rentals.UpdateRental;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,15 +14,18 @@ public sealed class RentalsController : ControllerBase
     private readonly CreateRentalCommandHandler _createRentalCommandHandler;
     private readonly GetRentalByIdQueryHandler _getRentalByIdQueryHandler;
     private readonly CancelRentalCommandHandler _cancelRentalCommandHandler;
+    private readonly UpdateRentalCommandHandler _updateRentalCommandHandler;
 
     public RentalsController(
         CreateRentalCommandHandler createRentalCommandHandler,
         GetRentalByIdQueryHandler getRentalByIdQueryHandler,
-        CancelRentalCommandHandler cancelRentalCommandHandler)
+        CancelRentalCommandHandler cancelRentalCommandHandler,
+        UpdateRentalCommandHandler updateRentalCommandHandler)
     {
         _createRentalCommandHandler = createRentalCommandHandler;
         _getRentalByIdQueryHandler = getRentalByIdQueryHandler;
         _cancelRentalCommandHandler = cancelRentalCommandHandler;
+        _updateRentalCommandHandler = updateRentalCommandHandler;
     }
 
     [HttpPost]
@@ -72,8 +76,32 @@ public sealed class RentalsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> UpdateRental(
+    Guid id,
+    UpdateRentalRequest request,
+    CancellationToken cancellationToken)
+    {
+        var command = new UpdateRentalCommand(
+            id,
+            request.CarId,
+            request.StartDate,
+            request.EndDate);
+
+        await _updateRentalCommandHandler.HandleAsync(
+            command,
+            cancellationToken);
+
+        return NoContent();
+    }
 }
 
+public sealed record UpdateRentalRequest(
+    Guid CarId,
+    DateOnly StartDate,
+    DateOnly EndDate);
+    
 public sealed record CreateRentalRequest(
     Guid CustomerId,
     Guid CarId,
