@@ -50,4 +50,26 @@ public sealed class Rental
 
         Status = RentalStatus.Cancelled;
     }
+
+    public void Update(
+    Guid carId,
+    DateOnly startDate,
+    DateOnly endDate)
+    {
+        if (Status == RentalStatus.Cancelled)
+        {
+            throw new DomainException(
+                "A cancelled rental cannot be modified.");
+        }
+
+        if (endDate <= startDate)
+        {
+            throw new DomainException(
+                "End date must be greater than start date.");
+        }
+
+        CarId = carId;
+        StartDate = startDate;
+        EndDate = endDate;
+    }
 }

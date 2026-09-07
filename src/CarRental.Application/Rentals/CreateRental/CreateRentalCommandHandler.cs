@@ -45,10 +45,10 @@ public sealed class CreateRentalCommandHandler
         }
 
         var hasOverlap = await _rentalRepository.HasOverlappingRentalAsync(
-            command.CarId,
-            command.StartDate,
-            command.EndDate,
-            cancellationToken);
+            carId: command.CarId,
+            startDate: command.StartDate,
+            endDate: command.EndDate,
+            cancellationToken: cancellationToken);
 
         if (hasOverlap)
         {

@@ -41,16 +41,18 @@ public sealed class RentalRepository : IRentalRepository
         Guid carId,
         DateOnly startDate,
         DateOnly endDate,
+        Guid? excludedRentalId = null,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Rentals
-            .AnyAsync(
-                r =>
-                    r.CarId == carId &&
-                    r.Status == RentalStatus.Reserved &&
-                    startDate < r.EndDate &&
-                    endDate > r.StartDate,
-                cancellationToken);
+        return await _dbContext.Rentals.AnyAsync(
+            rental =>
+                rental.CarId == carId &&
+                rental.Status != RentalStatus.Cancelled &&
+                (!excludedRentalId.HasValue ||
+                 rental.Id != excludedRentalId.Value) &&
+                rental.StartDate < endDate &&
+                rental.EndDate > startDate,
+            cancellationToken);
     }
 
     public async Task AddAsync(

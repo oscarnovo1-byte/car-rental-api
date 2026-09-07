@@ -123,9 +123,10 @@ public sealed class CreateRentalCommandHandlerTests
 
         _rentalRepositoryMock
             .Setup(x => x.HasOverlappingRentalAsync(
-                command.CarId,
-                command.StartDate,
-                command.EndDate,
+                carId:command.CarId,
+                startDate:command.StartDate,
+                endDate: command.EndDate,
+                null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
@@ -174,6 +175,7 @@ public sealed class CreateRentalCommandHandlerTests
                 command.CarId,
                 command.StartDate,
                 command.EndDate,
+                null,
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 

@@ -16,6 +16,7 @@ public interface IRentalRepository
         Guid carId,
         DateOnly startDate,
         DateOnly endDate,
+        Guid? excludedRentalId = null,
         CancellationToken cancellationToken = default);
 
     Task AddAsync(
