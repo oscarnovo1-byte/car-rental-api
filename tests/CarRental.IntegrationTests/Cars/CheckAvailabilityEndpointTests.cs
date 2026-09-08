@@ -129,4 +129,88 @@ public sealed class CheckAvailabilityEndpointTests
             secondResult,
             x => x.Id == car.Id);
     }
+
+    [Fact]
+    public async Task CheckAvailability_AfterCancellingRental_ShouldInvalidateCache()
+    {
+        // Arrange
+        var customer = new Customer(
+            "John Doe",
+            "Main Street 123",
+            "john@example.com");
+
+        var car = new Car(
+            CarType.Suv,
+            "Toyota RAV4");
+
+        var rental = new Rental(
+            customer.Id,
+            car.Id,
+            new DateOnly(2026, 9, 10),
+            new DateOnly(2026, 9, 15));
+
+        await _factory.SeedAsync(db =>
+        {
+            db.Customers.Add(customer);
+            db.Cars.Add(car);
+            db.Rentals.Add(rental);
+
+            return Task.CompletedTask;
+        });
+
+        var availabilityUrl =
+            "/api/cars/availability" +
+            "?startDate=2026-09-10" +
+            "&endDate=2026-09-15";
+
+        // Primera consulta:
+        // el rental está activo, por lo tanto el auto NO está disponible.
+        // Este resultado queda cacheado.
+        var firstResponse =
+            await _client.GetAsync(availabilityUrl);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            firstResponse.StatusCode);
+
+        var firstResult =
+            await firstResponse.Content
+                .ReadFromJsonAsync<List<AvailableCarDto>>();
+
+        Assert.NotNull(firstResult);
+
+        Assert.DoesNotContain(
+            firstResult,
+            x => x.Id == car.Id);
+
+        // Act
+        var cancelResponse =
+            await _client.PatchAsync(
+                $"/api/rentals/{rental.Id}/cancel",
+                null);
+
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            cancelResponse.StatusCode);
+
+        // Second query with the exact same parameters.
+        // If the cache was properly invalidated,
+        // it should query again and find the available car.
+        var secondResponse =
+            await _client.GetAsync(availabilityUrl);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            secondResponse.StatusCode);
+
+        var secondResult =
+            await secondResponse.Content
+                .ReadFromJsonAsync<List<AvailableCarDto>>();
+
+        Assert.NotNull(secondResult);
+
+        Assert.Contains(
+            secondResult,
+            x => x.Id == car.Id);
+    }
 }

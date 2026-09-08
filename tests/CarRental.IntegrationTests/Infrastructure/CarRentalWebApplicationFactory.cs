@@ -1,3 +1,4 @@
+using CarRental.Application.Abstractions;
 using CarRental.Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Hosting;
@@ -64,8 +65,14 @@ public sealed class CarRentalWebApplicationFactory
 
         await dbContext.Database.EnsureDeletedAsync();
         await dbContext.Database.EnsureCreatedAsync();
+
+        var cacheInvalidator =
+            scope.ServiceProvider
+                .GetRequiredService<ICarAvailabilityCacheInvalidator>();
+
+        cacheInvalidator.Invalidate();
     }
-    
+
     protected override void Dispose(bool disposing)
     {
         base.Dispose(disposing);
