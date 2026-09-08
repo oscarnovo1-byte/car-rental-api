@@ -3,6 +3,7 @@ using CarRental.Application.Exceptions;
 using CarRental.Application.Rentals.CreateRental;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
+
 using Moq;
 
 namespace CarRental.UnitTests.Application.Rentals;
@@ -12,6 +13,7 @@ public sealed class CreateRentalCommandHandlerTests
     private readonly Mock<ICustomerRepository> _customerRepositoryMock;
     private readonly Mock<ICarRepository> _carRepositoryMock;
     private readonly Mock<IRentalRepository> _rentalRepositoryMock;
+    private readonly Mock<ICarAvailabilityCacheInvalidator> _cacheInvalidatorMock;
 
     private readonly CreateRentalCommandHandler _handler;
 
@@ -20,11 +22,13 @@ public sealed class CreateRentalCommandHandlerTests
         _customerRepositoryMock = new Mock<ICustomerRepository>();
         _carRepositoryMock = new Mock<ICarRepository>();
         _rentalRepositoryMock = new Mock<IRentalRepository>();
+        _cacheInvalidatorMock = new Mock<ICarAvailabilityCacheInvalidator>();
 
         _handler = new CreateRentalCommandHandler(
             _customerRepositoryMock.Object,
             _carRepositoryMock.Object,
-            _rentalRepositoryMock.Object);
+            _rentalRepositoryMock.Object,
+            _cacheInvalidatorMock.Object);
     }
 
     [Fact]
@@ -55,6 +59,10 @@ public sealed class CreateRentalCommandHandlerTests
             x => x.AddAsync(
                 It.IsAny<Rental>(),
                 It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
             Times.Never);
     }
 
@@ -92,6 +100,10 @@ public sealed class CreateRentalCommandHandlerTests
                 It.IsAny<Rental>(),
                 It.IsAny<CancellationToken>()),
             Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
+            Times.Never);
     }
 
     [Fact]
@@ -123,8 +135,8 @@ public sealed class CreateRentalCommandHandlerTests
 
         _rentalRepositoryMock
             .Setup(x => x.HasOverlappingRentalAsync(
-                carId:command.CarId,
-                startDate:command.StartDate,
+                carId: command.CarId,
+                startDate: command.StartDate,
                 endDate: command.EndDate,
                 null,
                 It.IsAny<CancellationToken>()))
@@ -140,6 +152,10 @@ public sealed class CreateRentalCommandHandlerTests
             x => x.AddAsync(
                 It.IsAny<Rental>(),
                 It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
             Times.Never);
     }
 
@@ -194,6 +210,10 @@ public sealed class CreateRentalCommandHandlerTests
                     r.EndDate == command.EndDate &&
                     r.Status == RentalStatus.Reserved),
                 It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
             Times.Once);
     }
 

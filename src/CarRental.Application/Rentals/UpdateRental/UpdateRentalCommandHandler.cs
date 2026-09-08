@@ -7,13 +7,16 @@ public sealed class UpdateRentalCommandHandler
 {
     private readonly IRentalRepository _rentalRepository;
     private readonly ICarRepository _carRepository;
+    private readonly ICarAvailabilityCacheInvalidator _cacheInvalidator;
 
     public UpdateRentalCommandHandler(
         IRentalRepository rentalRepository,
-        ICarRepository carRepository)
+        ICarRepository carRepository,
+        ICarAvailabilityCacheInvalidator cacheInvalidator)
     {
         _rentalRepository = rentalRepository;
         _carRepository = carRepository;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task HandleAsync(
@@ -58,6 +61,8 @@ public sealed class UpdateRentalCommandHandler
             command.CarId,
             command.StartDate,
             command.EndDate);
+
+        _cacheInvalidator.Invalidate();
 
         await _rentalRepository.SaveChangesAsync(
             cancellationToken);

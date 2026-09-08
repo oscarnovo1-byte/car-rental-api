@@ -1,8 +1,11 @@
 using CarRental.Application.Abstractions;
+using CarRental.Infrastructure.Caching;
 using CarRental.Infrastructure.Persistence;
 using CarRental.Infrastructure.Queries;
 using CarRental.Infrastructure.Repositories;
+
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -21,7 +24,31 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<ICarRepository, CarRepository>();
         services.AddScoped<IRentalRepository, RentalRepository>();
-        services.AddScoped<ICarAvailabilityQuery, CarAvailabilityQuery>();
+        services.AddMemoryCache();
+
+        services.AddScoped<CarAvailabilityQuery>();
+
+        services.AddSingleton<CarAvailabilityCacheState>();
+
+        services.AddSingleton<ICarAvailabilityCacheInvalidator>(
+            sp => sp.GetRequiredService<CarAvailabilityCacheState>());
+
+        services.AddScoped<ICarAvailabilityQuery>(sp =>
+        {
+            var query =
+                sp.GetRequiredService<CarAvailabilityQuery>();
+
+            var cache =
+                sp.GetRequiredService<IMemoryCache>();
+
+            var cacheState =
+                sp.GetRequiredService<CarAvailabilityCacheState>();
+
+            return new CachedCarAvailabilityQuery(
+                query,
+                cache,
+                cacheState);
+        });
 
         return services;
     }

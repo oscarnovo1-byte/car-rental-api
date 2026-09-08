@@ -1,18 +1,35 @@
 using System.Net;
+using System.Net.Http.Json;
 
+using CarRental.Application.Cars.CheckAvailability;
+using CarRental.Domain.Entities;
+using CarRental.Domain.Enums;
 using CarRental.IntegrationTests.Infrastructure;
 
 namespace CarRental.IntegrationTests.Cars;
 
 public sealed class CheckAvailabilityEndpointTests
-    : IClassFixture<CarRentalWebApplicationFactory>
+    : IClassFixture<CarRentalWebApplicationFactory>,
+      IAsyncLifetime
 {
+    private readonly CarRentalWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
     public CheckAvailabilityEndpointTests(
         CarRentalWebApplicationFactory factory)
     {
+        _factory = factory;
         _client = factory.CreateClient();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await _factory.ResetDatabaseAsync();
+    }
+
+    public Task DisposeAsync()
+    {
+        return Task.CompletedTask;
     }
 
     [Fact]
@@ -31,5 +48,85 @@ public sealed class CheckAvailabilityEndpointTests
             "/api/cars/availability?startDate=2026-09-15&endDate=2026-09-10");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task CheckAvailability_AfterCreatingRental_ShouldInvalidateCache()
+    {
+        var customer = new Customer(
+            "John Doe",
+            "Main Street 123",
+            "john@example.com");
+
+        var car = new Car(
+            CarType.Suv,
+            "Toyota RAV4");
+
+        await _factory.SeedAsync(db =>
+        {
+            db.Customers.Add(customer);
+            db.Cars.Add(car);
+
+            return Task.CompletedTask;
+        });
+
+        var availabilityUrl =
+            "/api/cars/availability" +
+            "?startDate=2026-09-10" +
+            "&endDate=2026-09-15";
+
+        // Primera consulta: carga el resultado en cache
+        var firstResponse =
+            await _client.GetAsync(availabilityUrl);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            firstResponse.StatusCode);
+
+        var firstResult =
+            await firstResponse.Content
+                .ReadFromJsonAsync<List<AvailableCarDto>>();
+
+        Assert.NotNull(firstResult);
+
+        Assert.Contains(
+            firstResult,
+            x => x.Id == car.Id);
+
+        // Creamos un rental para ese mismo auto y período
+        var createRequest = new
+        {
+            CustomerId = customer.Id,
+            CarId = car.Id,
+            StartDate = new DateOnly(2026, 9, 10),
+            EndDate = new DateOnly(2026, 9, 15)
+        };
+
+        var createResponse =
+            await _client.PostAsJsonAsync(
+                "/api/rentals",
+                createRequest);
+
+        Assert.Equal(
+            HttpStatusCode.Created,
+            createResponse.StatusCode);
+
+        // Segunda consulta con exactamente la misma key
+        var secondResponse =
+            await _client.GetAsync(availabilityUrl);
+
+        Assert.Equal(
+            HttpStatusCode.OK,
+            secondResponse.StatusCode);
+
+        var secondResult =
+            await secondResponse.Content
+                .ReadFromJsonAsync<List<AvailableCarDto>>();
+
+        Assert.NotNull(secondResult);
+
+        Assert.DoesNotContain(
+            secondResult,
+            x => x.Id == car.Id);
     }
 }

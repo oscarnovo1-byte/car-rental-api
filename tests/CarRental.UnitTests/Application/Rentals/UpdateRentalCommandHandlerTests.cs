@@ -4,6 +4,7 @@ using CarRental.Application.Rentals.UpdateRental;
 using CarRental.Domain.Entities;
 using CarRental.Domain.Enums;
 using CarRental.Domain.Exceptions;
+
 using Moq;
 
 namespace CarRental.UnitTests.Application.Rentals;
@@ -12,16 +13,19 @@ public sealed class UpdateRentalCommandHandlerTests
 {
     private readonly Mock<IRentalRepository> _rentalRepositoryMock;
     private readonly Mock<ICarRepository> _carRepositoryMock;
+    private readonly Mock<ICarAvailabilityCacheInvalidator> _cacheInvalidatorMock;
     private readonly UpdateRentalCommandHandler _handler;
 
     public UpdateRentalCommandHandlerTests()
     {
         _rentalRepositoryMock = new Mock<IRentalRepository>();
         _carRepositoryMock = new Mock<ICarRepository>();
+        _cacheInvalidatorMock = new Mock<ICarAvailabilityCacheInvalidator>();
 
         _handler = new UpdateRentalCommandHandler(
             _rentalRepositoryMock.Object,
-            _carRepositoryMock.Object);
+            _carRepositoryMock.Object,
+            _cacheInvalidatorMock.Object);
     }
 
     [Fact]
@@ -82,6 +86,10 @@ public sealed class UpdateRentalCommandHandlerTests
             x => x.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
             Times.Once);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
+            Times.Once);
     }
 
     [Fact]
@@ -111,6 +119,10 @@ public sealed class UpdateRentalCommandHandlerTests
         _rentalRepositoryMock.Verify(
             x => x.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
             Times.Never);
     }
 
@@ -154,6 +166,10 @@ public sealed class UpdateRentalCommandHandlerTests
         _rentalRepositoryMock.Verify(
             x => x.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
+            Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
             Times.Never);
     }
 
@@ -211,6 +227,10 @@ public sealed class UpdateRentalCommandHandlerTests
             x => x.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
             Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
+            Times.Never);            
     }
 
     [Fact]
@@ -269,5 +289,9 @@ public sealed class UpdateRentalCommandHandlerTests
             x => x.SaveChangesAsync(
                 It.IsAny<CancellationToken>()),
             Times.Never);
+
+        _cacheInvalidatorMock.Verify(
+            x => x.Invalidate(),
+            Times.Never);            
     }
 }

@@ -9,15 +9,18 @@ public sealed class CreateRentalCommandHandler
     private readonly ICustomerRepository _customerRepository;
     private readonly ICarRepository _carRepository;
     private readonly IRentalRepository _rentalRepository;
+    private readonly ICarAvailabilityCacheInvalidator _cacheInvalidator;
 
     public CreateRentalCommandHandler(
         ICustomerRepository customerRepository,
         ICarRepository carRepository,
-        IRentalRepository rentalRepository)
+        IRentalRepository rentalRepository,
+        ICarAvailabilityCacheInvalidator cacheInvalidator)
     {
         _customerRepository = customerRepository;
         _carRepository = carRepository;
         _rentalRepository = rentalRepository;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task<Guid> HandleAsync(
@@ -66,6 +69,8 @@ public sealed class CreateRentalCommandHandler
             rental,
             cancellationToken);
 
+        _cacheInvalidator.Invalidate();
+        
         return rental.Id;
     }
 }

@@ -6,11 +6,14 @@ namespace CarRental.Application.Rentals.CancelRental;
 public sealed class CancelRentalCommandHandler
 {
     private readonly IRentalRepository _rentalRepository;
+    private readonly ICarAvailabilityCacheInvalidator _cacheInvalidator;
 
     public CancelRentalCommandHandler(
-        IRentalRepository rentalRepository)
+        IRentalRepository rentalRepository,
+        ICarAvailabilityCacheInvalidator cacheInvalidator)
     {
         _rentalRepository = rentalRepository;
+        _cacheInvalidator = cacheInvalidator;
     }
 
     public async Task HandleAsync(
@@ -28,6 +31,8 @@ public sealed class CancelRentalCommandHandler
         }
 
         rental.Cancel();
+
+        _cacheInvalidator.Invalidate();
 
         await _rentalRepository.SaveChangesAsync(
             cancellationToken);
